@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const checkInvalidToken = require('./checkInvalidToken');
 
@@ -9,44 +10,83 @@ const checkInvalidToken = require('./checkInvalidToken');
 
 const auth = async (req, res, next) => {
   try {
-    // TODO: Add token refresh check
-    // TODO: Implement token rotation
-    // TODO: Add token usage tracking
-    // TODO: Implement token expiration warning
+    console.log('Auth middleware started');
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    console.log('Extracted token:', token ? 'Token exists' : 'No token');
+    
+    if (!token) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
 
     // First check if token is invalidated
-    await checkInvalidToken(req, res, async () => {
-      const token = req.header('Authorization')?.replace('Bearer ', '');
-      
-      if (!token) {
-        return res.status(401).json({ message: 'Authentication required' });
-      }
+    try {
+      await checkInvalidToken(req, res, async () => {
+        try {
+          console.log('JWT Secret:', process.env.JWT_SECRET ? 'Secret exists' : 'No secret');
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          console.log('Token decoded successfully:', decoded);
 
-      // TODO: Add token format validation
-      // TODO: Implement token versioning
-      // TODO: Add token scope validation
+          // Log the query we're about to make
+          console.log('Searching for user with ID:', decoded.userId);
+          
+          // Convert string ID to ObjectId
+          const userId = new mongoose.Types.ObjectId(decoded.userId);
+          const user = await User.findById(userId);
+          
+          
+          if (user) {
+            console.log('User details11111111111111111:', {
+              id: user._id.toString(),
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName
+            });
+          }
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findOne({ _id: decoded.userId });
+          if (!user) {
+            return res.status(401).json({ 
+              message: 'User not found',
+              debug: {
+                userId: decoded.userId,
+                tokenDecoded: decoded,
+                timestamp: new Date().toISOString()
+              }
+            });
+          }
 
-      if (!user) {
-        return res.status(401).json({ message: 'User not found' });
-      }
+          // Convert user to plain object and remove sensitive data
+          const userObject = user.toObject();
+          delete userObject.password;
 
-      // TODO: Check user account status (active, suspended, etc.)
-      // TODO: Validate user session
-      // TODO: Update last activity timestamp
-      // TODO: Add request logging for audit trail
+          req.user = userObject;
+          req.token = token;
+          return next();
+        } catch (jwtError) {
+          console.error('JWT Error:', {
+            name: jwtError.name,
+            message: jwtError.message,
+            stack: jwtError.stack
+          });
 
-      req.user = user;
-      req.token = token;
-      next();
-    });
+          if (jwtError.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Token has expired' });
+          } else if (jwtError.name === 'JsonWebTokenError') {
+            return res.status(401).json({ message: 'Invalid token' });
+          }
+          throw jwtError;
+        }
+      });
+    } catch (error) {
+      console.error('Token check error:', error);
+      return res.status(401).json({ message: 'Authentication failed' });
+    }
   } catch (error) {
-    // TODO: Implement proper error logging
-    // TODO: Add security event tracking
-    // TODO: Implement automatic token refresh on expiration
-    res.status(401).json({ message: 'Please authenticate' });
+    console.error('Auth middleware error:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    return res.status(401).json({ message: 'Authentication failed' });
   }
 };
 

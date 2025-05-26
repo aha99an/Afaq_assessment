@@ -67,11 +67,6 @@ const signupValidation = [
     .custom(isValidUrl)
     .withMessage('GitHub URL must be a valid URL'),
   
-  body('country')
-    .optional()
-    .trim()
-    .isLength({ min: 2 })
-    .withMessage('Country must be at least 2 characters long'),
   
   validate
 ];

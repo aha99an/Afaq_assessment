@@ -244,4 +244,93 @@ router.post('/signout', auth, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /auth/update-profile:
+ *   put:
+ *     summary: Update user profile information
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *                 minLength: 2
+ *               lastName:
+ *                 type: string
+ *                 minLength: 2
+ *               profilePhoto:
+ *                 type: string
+ *                 format: binary
+ *               githubUrl:
+ *                 type: string
+ *               country:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       401:
+ *         description: Authentication required
+ *       400:
+ *         description: Invalid input
+ */
+router.put('/update-profile', auth, upload.single('profilePhoto'), async (req, res) => {
+  try {
+    const { firstName, lastName, githubUrl, country } = req.body;
+    // Get the Mongoose document to use save()
+    const user = await User.findById(req.user._id);
+
+    // Handle profile photo update
+    if (req.file) {
+      // Delete old profile photo if exists
+      if (user.profilePhoto) {
+        const oldPhotoPath = path.join(__dirname, '..', user.profilePhoto);
+        deleteUploadedFile(oldPhotoPath);
+      }
+
+      // Save new profile photo
+      const relativePath = path.join('uploads', 'profile-photos', user.email, req.file.filename);
+      user.profilePhoto = relativePath.replace(/\\/g, '/');
+    }
+
+    // Update user fields
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (githubUrl) user.githubUrl = githubUrl;
+    if (country) user.country = country;
+
+    await user.save();
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        profilePhoto: user.profilePhoto,
+        githubUrl: user.githubUrl,
+        country: user.country,
+        joinDate: user.joinDate
+      }
+    });
+  } catch (error) {
+    // If update fails and new photo was uploaded, delete it
+    if (req.file) {
+      deleteUploadedFile(req.file.path);
+    }
+    console.error('Profile update error:', error);
+    res.status(400).json({ 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
 module.exports = router; 

@@ -29,12 +29,14 @@ const checkInvalidToken = async (req, res, next) => {
       return res.status(401).json({ message: 'Token has been invalidated' });
     }
 
-    next();
+    // If we reach here, the token is valid
+    return next();
   } catch (error) {
-    // TODO: Implement proper error logging
-    // TODO: Add error tracking service integration
-    // TODO: Implement fallback validation mechanism
-    res.status(500).json({ message: 'Error checking token validity' });
+    console.error('Token validation error:', error);
+    return res.status(500).json({ 
+      message: 'Error checking token validity',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
