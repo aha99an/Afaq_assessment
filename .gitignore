@@ -46,6 +46,8 @@ Thumbs.db
 # Backend specific
 backend/logs/
 backend/tmp/
+backend/uploads/
+backend/uploads/**/*
 
 # Frontend specific
 frontend/.expo/
@@ -64,4 +66,4 @@ frontend/*.pem
 frontend/.env*.local
 
 # TypeScript
-*.tsbuildinfo 
+*.tsbuildinfo
