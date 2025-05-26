@@ -4,15 +4,14 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
 const User = require('../models/User');
+const InvalidToken = require('../models/InvalidToken');
 const auth = require('../middleware/auth');
 const { signupValidation, signinValidation } = require('../middleware/validators');
 const upload = require('../middleware/upload');
 
 // TODO: Implement rate limiting for auth routes to prevent brute force attacks
-// TODO: Add password reset functionality
 // TODO: Add email verification system
 // TODO: Implement refresh token mechanism
-// TODO: Add session management for multiple device support
 
 // Helper function to delete uploaded file
 const deleteUploadedFile = (filePath) => {
@@ -64,38 +63,12 @@ const deleteUploadedFile = (filePath) => {
  *       400:
  *         description: Invalid input
  */
-router.post('/signup', upload.single('profilePhoto'), async (req, res) => {
+router.post('/signup', upload.single('profilePhoto'), signupValidation, async (req, res) => {
   try {
     // TODO: Add email verification before allowing signup
-    // TODO: Implement password strength validation
-    // TODO: Add CAPTCHA for bot prevention
     // TODO: Implement social media signup options
 
-    // First validate the input
-    const validationErrors = [];
     const { firstName, lastName, email, password, githubUrl, country } = req.body;
-
-    // Basic validation
-    if (!firstName || firstName.length < 2) {
-      validationErrors.push({ field: 'firstName', message: 'First name must be at least 2 characters long' });
-    }
-    if (!lastName || lastName.length < 2) {
-      validationErrors.push({ field: 'lastName', message: 'Last name must be at least 2 characters long' });
-    }
-    if (!email || !email.includes('@')) {
-      validationErrors.push({ field: 'email', message: 'Please enter a valid email address' });
-    }
-    if (!password || password.length < 8) {
-      validationErrors.push({ field: 'password', message: 'Password must be at least 8 characters long' });
-    }
-
-    // If there are validation errors, delete the uploaded file and return errors
-    if (validationErrors.length > 0) {
-      if (req.file) {
-        deleteUploadedFile(req.file.path);
-      }
-      return res.status(400).json({ errors: validationErrors });
-    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -115,7 +88,6 @@ router.post('/signup', upload.single('profilePhoto'), async (req, res) => {
 
     // TODO: Add email verification token generation
     // TODO: Send welcome email to new users
-    // TODO: Implement referral system if needed
 
     // Create new user
     const user = new User({
@@ -137,10 +109,6 @@ router.post('/signup', upload.single('profilePhoto'), async (req, res) => {
       }
       throw error;
     }
-
-    // TODO: Implement refresh token generation
-    // TODO: Add user preferences initialization
-    // TODO: Set up user activity tracking
 
     // Generate token
     const token = jwt.sign(
@@ -203,10 +171,6 @@ router.post('/signup', upload.single('profilePhoto'), async (req, res) => {
  */
 router.post('/signin', signinValidation, async (req, res) => {
   try {
-    // TODO: Implement login attempt tracking
-    // TODO: Add 2FA support
-    // TODO: Implement remember me functionality
-    // TODO: Add device fingerprinting
 
     const { email, password } = req.body;
 
@@ -222,10 +186,6 @@ router.post('/signin', signinValidation, async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // TODO: Update last login timestamp
-    // TODO: Track login location
-    // TODO: Implement session management
-    // TODO: Add login notification if enabled
 
     // Generate token
     const token = jwt.sign(
@@ -265,19 +225,21 @@ router.post('/signin', signinValidation, async (req, res) => {
  *     responses:
  *       200:
  *         description: Sign out successful
+ *       401:
+ *         description: Authentication required
+ *       500:
+ *         description: Server error
  */
 router.post('/signout', auth, async (req, res) => {
   try {
-    // TODO: Implement token blacklisting
-    // TODO: Clear user sessions
-    // TODO: Add signout activity logging
-    // TODO: Implement force signout from all devices option
+    // Add token to invalid tokens collection
+    const invalidToken = new InvalidToken({
+      token: req.token
+    });
+    await invalidToken.save();
 
-    // In a real application, you might want to invalidate the token
-    // For now, we'll just send a success message
     res.json({ message: 'Sign out successful' });
   } catch (error) {
-    // TODO: Implement proper error logging
     res.status(500).json({ message: error.message });
   }
 });
