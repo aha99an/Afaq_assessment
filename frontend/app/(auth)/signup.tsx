@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'reac
 import { router } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import config from '../../src/config';
 
 interface ValidationError {
   type: string;
@@ -41,7 +42,7 @@ export default function SignupScreen() {
         return;
       }
 
-      const response = await fetch('http://localhost:3000/auth/signup', {
+      const response = await fetch(`${config.apiBaseUrl}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

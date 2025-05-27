@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput,
 import { router } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
+import config from '../../src/config';
 
 const DEFAULT_PROFILE_PHOTO = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
 
@@ -58,33 +59,18 @@ export default function ProfileScreen() {
     try {
       setLoading(true);
 
-      // Create form data for multipart/form-data
-      const formData = new FormData();
-      formData.append('firstName', editedUser.firstName);
-      formData.append('lastName', editedUser.lastName);
-      formData.append('country', editedUser.country);
-      formData.append('githubUrl', editedUser.githubUrl);
-
-      // If profile photo is a local URI, append it
-      if (editedUser.profilePhoto && editedUser.profilePhoto.startsWith('file://')) {
-        const photoUri = editedUser.profilePhoto;
-        const filename = photoUri.split('/').pop() || 'photo.jpg';
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : 'image';
-
-        formData.append('profilePhoto', {
-          uri: photoUri,
-          name: filename,
-          type,
-        } as any);
-      }
-
-      const response = await fetch('http://localhost:3000/auth/update-profile', {
+      const response = await fetch(`${config.apiBaseUrl}/auth/update-profile`, {
         method: 'PUT',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: formData,
+        body: JSON.stringify({
+          firstName: editedUser.firstName,
+          lastName: editedUser.lastName,
+          country: editedUser.country,
+          githubUrl: editedUser.githubUrl,
+        }),
       });
 
       const data = await response.json();
