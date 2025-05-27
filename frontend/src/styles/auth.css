@@ -1,0 +1,119 @@
+.container {
+  flex: 1;
+  padding: 20px;
+  justify-content: center;
+  background-color: #fff;
+}
+
+.form {
+  padding: 20px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.inputContainer {
+  margin-bottom: 15px;
+}
+
+.input {
+  border-width: 1px;
+  border-color: #ddd;
+  padding: 15px;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.passwordContainer {
+  flex-direction: row;
+  align-items: center;
+  border-width: 1px;
+  border-color: #ddd;
+  border-radius: 5px;
+}
+
+.passwordInput {
+  flex: 1;
+  padding: 15px;
+  font-size: 16px;
+}
+
+.eyeIcon {
+  padding: 10px;
+}
+
+.inputError {
+  border-color: #FF3B30;
+}
+
+.errorText {
+  color: #FF3B30;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.errorContainer {
+  background-color: #FFE5E5;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border-width: 1px;
+  border-color: #FF3B30;
+}
+
+.generalErrorText {
+  color: #FF3B30;
+  text-align: center;
+  font-size: 14px;
+}
+
+.button {
+  background-color: #007AFF;
+  padding: 15px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.buttonDisabled {
+  opacity: 0.5;
+}
+
+.buttonText {
+  color: #fff;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.linkButton {
+  margin-top: 20px;
+}
+
+.linkText {
+  color: #007AFF;
+  text-align: center;
+  font-size: 16px;
+}
+
+.pickerContainer {
+  border-width: 1px;
+  border-color: #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.picker {
+  height: 50px;
+}
+
+.label {
+  font-size: 16px;
+  margin-bottom: 5px;
+  color: #333;
+} 

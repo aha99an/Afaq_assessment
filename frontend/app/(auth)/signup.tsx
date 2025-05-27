@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import config from '../../src/config';
+import { authStyles as styles } from '../../src/styles/auth.styles';
 
 interface ValidationError {
   type: string;
@@ -134,254 +135,171 @@ export default function SignupScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.form}>
-        <Text style={styles.title}>Create Account</Text>
-        
-        {generalError ? (
-          <Text style={styles.errorText}>{generalError}</Text>
-        ) : null}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={60}
+    >
+      <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.form}>
+          <Text style={styles.title}>Create Account</Text>
+          
+          {generalError ? (
+            <Text style={styles.errorText}>{generalError}</Text>
+          ) : null}
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={[styles.input, errors.firstName && styles.inputError]}
-            placeholder="First Name"
-            value={firstName}
-            onChangeText={(text) => {
-              setFirstName(text);
-              clearError('firstName');
-            }}
-            autoCapitalize="words"
-          />
-          {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
-        </View>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={[styles.input, errors.lastName && styles.inputError]}
-            placeholder="Last Name"
-            value={lastName}
-            onChangeText={(text) => {
-              setLastName(text);
-              clearError('lastName');
-            }}
-            autoCapitalize="words"
-          />
-          {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
-        </View>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={[styles.input, errors.email && styles.inputError]}
-            placeholder="Email"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              clearError('email');
-            }}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Country</Text>
-          <View style={[styles.pickerContainer, errors.country && styles.inputError]}>
-            <Picker
-              selectedValue={country}
-              onValueChange={(value) => {
-                setCountry(value);
-                clearError('country');
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[styles.input, errors.firstName && styles.inputError]}
+              placeholder="First Name"
+              value={firstName}
+              onChangeText={(text) => {
+                setFirstName(text);
+                clearError('firstName');
               }}
-              style={styles.picker}
-            >
-              <Picker.Item label="Select your country" value="" />
-              {COUNTRIES.map((item, index) => (
-                <Picker.Item
-                  key={index}
-                  label={item.label}
-                  value={item.value}
-                  enabled={!item.disabled}
-                  color={item.disabled ? '#666' : '#000'}
+              autoCapitalize="words"
+            />
+            {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[styles.input, errors.lastName && styles.inputError]}
+              placeholder="Last Name"
+              value={lastName}
+              onChangeText={(text) => {
+                setLastName(text);
+                clearError('lastName');
+              }}
+              autoCapitalize="words"
+            />
+            {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[styles.input, errors.email && styles.inputError]}
+              placeholder="Email"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                clearError('email');
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Country</Text>
+            <View style={[styles.pickerContainer, errors.country && styles.inputError]}>
+              <Picker
+                selectedValue={country}
+                onValueChange={(value) => {
+                  setCountry(value);
+                  clearError('country');
+                }}
+                style={styles.picker}
+              >
+                <Picker.Item label="Select your country" value="" />
+                {COUNTRIES.map((item, index) => (
+                  <Picker.Item
+                    key={index}
+                    label={item.label}
+                    value={item.value}
+                    enabled={!item.disabled}
+                    color={item.disabled ? '#666' : '#000'}
+                  />
+                ))}
+              </Picker>
+            </View>
+            {errors.country && <Text style={styles.errorText}>{errors.country}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[styles.input, errors.githubUrl && styles.inputError]}
+              placeholder="GitHub Profile URL"
+              value={githubUrl}
+              onChangeText={(text) => {
+                setGithubUrl(text);
+                clearError('githubUrl');
+              }}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+            {errors.githubUrl && <Text style={styles.errorText}>{errors.githubUrl}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={[styles.passwordInput, errors.password && styles.inputError]}
+                placeholder="Password"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  clearError('password');
+                }}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity 
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons 
+                  name={showPassword ? "eye-off" : "eye"} 
+                  size={24} 
+                  color="#666"
                 />
-              ))}
-            </Picker>
+              </TouchableOpacity>
+            </View>
+            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
           </View>
-          {errors.country && <Text style={styles.errorText}>{errors.country}</Text>}
-        </View>
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={[styles.input, errors.githubUrl && styles.inputError]}
-            placeholder="GitHub Profile URL"
-            value={githubUrl}
-            onChangeText={(text) => {
-              setGithubUrl(text);
-              clearError('githubUrl');
-            }}
-            autoCapitalize="none"
-            keyboardType="url"
-          />
-          {errors.githubUrl && <Text style={styles.errorText}>{errors.githubUrl}</Text>}
-        </View>
-
-        <View style={styles.inputContainer}>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={[styles.passwordInput, errors.password && styles.inputError]}
-              placeholder="Password"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                clearError('password');
-              }}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity 
-              style={styles.eyeIcon}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Ionicons 
-                name={showPassword ? "eye-off" : "eye"} 
-                size={24} 
-                color="#666"
+          <View style={styles.inputContainer}>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={[styles.passwordInput, errors.confirmPassword && styles.inputError]}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChangeText={(text) => {
+                  setConfirmPassword(text);
+                  clearError('confirmPassword');
+                }}
+                secureTextEntry={!showConfirmPassword}
               />
-            </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.eyeIcon}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                <Ionicons 
+                  name={showConfirmPassword ? "eye-off" : "eye"} 
+                  size={24} 
+                  color="#666"
+                />
+              </TouchableOpacity>
+            </View>
+            {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
           </View>
-          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+
+          <TouchableOpacity 
+            style={[styles.button, loading && styles.buttonDisabled]} 
+            onPress={handleSignup}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>{loading ? 'Creating Account...' : 'Sign Up'}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.linkButton} 
+            onPress={() => router.push('/(auth)/login')}
+          >
+            <Text style={styles.linkText}>Already have an account? Sign In</Text>
+          </TouchableOpacity>
         </View>
-
-        <View style={styles.inputContainer}>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={[styles.passwordInput, errors.confirmPassword && styles.inputError]}
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChangeText={(text) => {
-                setConfirmPassword(text);
-                clearError('confirmPassword');
-              }}
-              secureTextEntry={!showConfirmPassword}
-            />
-            <TouchableOpacity 
-              style={styles.eyeIcon}
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              <Ionicons 
-                name={showConfirmPassword ? "eye-off" : "eye"} 
-                size={24} 
-                color="#666"
-              />
-            </TouchableOpacity>
-          </View>
-          {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
-        </View>
-
-        <TouchableOpacity 
-          style={[styles.button, loading && styles.buttonDisabled]} 
-          onPress={handleSignup}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>{loading ? 'Creating Account...' : 'Sign Up'}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.linkButton} 
-          onPress={() => router.push('/(auth)/login')}
-        >
-          <Text style={styles.linkText}>Already have an account? Sign In</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  form: {
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  inputContainer: {
-    marginBottom: 15,
-  },
-  input: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    fontSize: 16,
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  passwordInput: {
-    flex: 1,
-    padding: 15,
-    fontSize: 16,
-  },
-  eyeIcon: {
-    padding: 10,
-  },
-  inputError: {
-    borderColor: '#FF3B30',
-  },
-  errorText: {
-    color: '#FF3B30',
-    fontSize: 12,
-    marginTop: 5,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  linkButton: {
-    marginTop: 20,
-  },
-  linkText: {
-    color: '#007AFF',
-    textAlign: 'center',
-    fontSize: 16,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: '#333',
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 50,
-  },
-}); 
+} 
