@@ -10,9 +10,7 @@ const checkInvalidToken = require('./checkInvalidToken');
 
 const auth = async (req, res, next) => {
   try {
-    console.log('Auth middleware started');
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    console.log('Extracted token:', token ? 'Token exists' : 'No token');
     
     if (!token) {
       return res.status(401).json({ message: 'Authentication required' });
@@ -22,26 +20,12 @@ const auth = async (req, res, next) => {
     try {
       await checkInvalidToken(req, res, async () => {
         try {
-          console.log('JWT Secret:', process.env.JWT_SECRET ? 'Secret exists' : 'No secret');
           const decoded = jwt.verify(token, process.env.JWT_SECRET);
-          console.log('Token decoded successfully:', decoded);
-
-          // Log the query we're about to make
-          console.log('Searching for user with ID:', decoded.userId);
           
           // Convert string ID to ObjectId
           const userId = new mongoose.Types.ObjectId(decoded.userId);
           const user = await User.findById(userId);
           
-          
-          if (user) {
-            console.log('User details11111111111111111:', {
-              id: user._id.toString(),
-              email: user.email,
-              firstName: user.firstName,
-              lastName: user.lastName
-            });
-          }
 
           if (!user) {
             return res.status(401).json({ 
