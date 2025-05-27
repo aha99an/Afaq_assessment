@@ -3,10 +3,11 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
+const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const InvalidToken = require('../models/InvalidToken');
 const auth = require('../middleware/auth');
-const { signupValidation, signinValidation } = require('../middleware/validators');
+const { signupValidation, signinValidation, changePasswordValidation } = require('../middleware/validators');
 const upload = require('../middleware/upload');
 
 // TODO: Implement rate limiting for auth routes to prevent brute force attacks
@@ -326,6 +327,68 @@ router.put('/update-profile', auth, upload.single('profilePhoto'), async (req, r
       deleteUploadedFile(req.file.path);
     }
     console.error('Profile update error:', error);
+    res.status(400).json({ 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/change-password:
+ *   post:
+ *     summary: Change user password
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - oldPassword
+ *               - newPassword
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *                 minLength: 8
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *       401:
+ *         description: Invalid old password
+ *       400:
+ *         description: Invalid input
+ */
+router.post('/change-password', auth, changePasswordValidation, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    // Get user
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify old password
+    const isMatch = await user.comparePassword(oldPassword);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid old password' });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Password change error:', error);
     res.status(400).json({ 
       message: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined

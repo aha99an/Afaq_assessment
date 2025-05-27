@@ -89,7 +89,33 @@ const signinValidation = [
   validate
 ];
 
+// Change password validation rules
+const changePasswordValidation = [
+  body('oldPassword')
+    .trim()
+    .notEmpty()
+    .withMessage('Old password is required'),
+  
+  body('newPassword')
+    .trim()
+    .notEmpty()
+    .withMessage('New password is required')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
+    .custom((value, { req }) => {
+      if (value === req.body.oldPassword) {
+        throw new Error('New password must be different from old password');
+      }
+      return true;
+    }),
+
+  validate
+];
+
 module.exports = {
   signupValidation,
-  signinValidation
+  signinValidation,
+  changePasswordValidation
 }; 
