@@ -3,9 +3,50 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput,
 import { router } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
+import { Picker } from '@react-native-picker/picker';
 import config from '../../src/config';
 
 const DEFAULT_PROFILE_PHOTO = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
+
+const COUNTRIES = [
+  // North America
+  { label: 'North America', value: 'NA', disabled: true },
+  { label: 'United States', value: 'United States' },
+  { label: 'Canada', value: 'Canada' },
+  { label: 'Mexico', value: 'Mexico' },
+  
+  // South America
+  { label: 'South America', value: 'SA', disabled: true },
+  { label: 'Brazil', value: 'Brazil' },
+  { label: 'Argentina', value: 'Argentina' },
+  { label: 'Colombia', value: 'Colombia' },
+  { label: 'Peru', value: 'Peru' },
+  { label: 'Chile', value: 'Chile' },
+  
+  // Europe
+  { label: 'Europe', value: 'EU', disabled: true },
+  { label: 'United Kingdom', value: 'United Kingdom' },
+  { label: 'France', value: 'France' },
+  { label: 'Germany', value: 'Germany' },
+  { label: 'Italy', value: 'Italy' },
+  { label: 'Spain', value: 'Spain' },
+  { label: 'Netherlands', value: 'Netherlands' },
+  { label: 'Switzerland', value: 'Switzerland' },
+  { label: 'Sweden', value: 'Sweden' },
+  { label: 'Norway', value: 'Norway' },
+  { label: 'Denmark', value: 'Denmark' },
+  
+  // Africa
+  { label: 'Africa', value: 'AF', disabled: true },
+  { label: 'South Africa', value: 'South Africa' },
+  { label: 'Egypt', value: 'Egypt' },
+  { label: 'Nigeria', value: 'Nigeria' },
+  { label: 'Kenya', value: 'Kenya' },
+  { label: 'Morocco', value: 'Morocco' },
+  { label: 'Ethiopia', value: 'Ethiopia' },
+  { label: 'Ghana', value: 'Ghana' },
+  { label: 'Tanzania', value: 'Tanzania' },
+];
 
 export default function ProfileScreen() {
   const { user, token, login, logout } = useAuth();
@@ -138,22 +179,7 @@ export default function ProfileScreen() {
             <TouchableOpacity onPress={handleEdit} style={styles.editButton}>
               <Text style={styles.editButtonText}>Edit Profile</Text>
             </TouchableOpacity>
-          ) : (
-            <View style={styles.editActions}>
-              <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={handleUpdateProfile} 
-                style={[styles.saveButton, loading && styles.disabledButton]}
-                disabled={loading}
-              >
-                <Text style={styles.saveButtonText}>
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          ) : null}
         </View>
 
         <View style={styles.infoCard}>
@@ -194,12 +220,24 @@ export default function ProfileScreen() {
             <>
               <View style={styles.editField}>
                 <Text style={styles.label}>Country</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editedUser.country}
-                  onChangeText={(text) => setEditedUser(prev => ({ ...prev, country: text }))}
-                  placeholder="Enter your country"
-                />
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={editedUser.country}
+                    onValueChange={(value) => setEditedUser(prev => ({ ...prev, country: value }))}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="Select your country" value="" />
+                    {COUNTRIES.map((item, index) => (
+                      <Picker.Item
+                        key={index}
+                        label={item.label}
+                        value={item.value}
+                        enabled={!item.disabled}
+                        color={item.disabled ? '#666' : '#000'}
+                      />
+                    ))}
+                  </Picker>
+                </View>
               </View>
 
               <View style={styles.editField}>
@@ -215,6 +253,23 @@ export default function ProfileScreen() {
             </>
           )}
         </View>
+
+        {isEditing && (
+          <View style={styles.editActionsContainer}>
+            <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={handleUpdateProfile} 
+              style={[styles.saveButton, loading && styles.disabledButton]}
+              disabled={loading}
+            >
+              <Text style={styles.saveButtonText}>
+                {loading ? 'Saving...' : 'Save Changes'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
@@ -303,21 +358,26 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  editActions: {
+  editActionsContainer: {
     flexDirection: 'row',
-    gap: 10,
+    justifyContent: 'center',
+    gap: 20,
+    marginTop: 20,
+    paddingHorizontal: 20,
   },
   cancelButton: {
     backgroundColor: '#FF3B30',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 5,
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 8,
+    minWidth: 120,
   },
   saveButton: {
     backgroundColor: '#34C759',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 5,
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 8,
+    minWidth: 120,
   },
   disabledButton: {
     opacity: 0.5,
@@ -325,10 +385,14 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
   },
   saveButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
   },
   infoCard: {
     backgroundColor: '#fff',
@@ -388,5 +452,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+    marginBottom: 15,
+  },
+  picker: {
+    height: 50,
   },
 }); 
