@@ -272,6 +272,13 @@ export default function ProfileScreen() {
         )}
       </View>
 
+      <TouchableOpacity 
+        style={[styles.button, { backgroundColor: '#007AFF', marginBottom: 10 }]} 
+        onPress={() => router.push('/(app)/change-password')}
+      >
+        <Text style={styles.buttonText}>Change Password</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
