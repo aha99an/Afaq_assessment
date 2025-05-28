@@ -24,15 +24,11 @@ exports.signup = async (req, res) => {
       password
     });
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
-
     await user.save();
-    console.log(password);
+
     // Create JWT token
     const token = jwt.sign(
-      { id: user._id },
+      { userId: user._id }, // Changed from id to userId to match auth middleware
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
@@ -62,31 +58,34 @@ exports.signup = async (req, res) => {
 exports.signin = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('Signin attempt for email:', email);
 
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
+      console.log('User not found for email:', email);
       return res.status(400).json({
         success: false,
         error: 'Invalid credentials'
       });
     }
+    console.log('User found:', { id: user._id, email: user.email });
 
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    console.log(password);
-    console.log(isMatch);
+    // Check password using the model's method
+    const isMatch = await user.comparePassword(password);
+    console.log('Password match result:', isMatch);
+    
     if (!isMatch) {
+      console.log('Password mismatch for user:', email);
       return res.status(400).json({
         success: false,
         error: 'Invalid credentials'
       });
     }
-    console.log(user);
 
     // Create JWT token
     const token = jwt.sign(
-      { id: user._id },
+      { userId: user._id }, // Changed from id to userId to match auth middleware
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
