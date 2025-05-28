@@ -6,7 +6,9 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./config/swagger');
 const routes = require('./routes');
-const authRoutes = require('./routes/auth');
+const authRoutes = require('./routes/authRoutes');
+const topicRoutes = require('./routes/topicRoutes');
+const replyRoutes = require('./routes/replyRoutes');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -24,6 +26,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 // Routes
 app.use('/', routes);
 app.use('/auth', authRoutes);
+app.use('/topics', topicRoutes);
+app.use('/replies', replyRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
