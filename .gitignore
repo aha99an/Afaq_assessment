@@ -67,3 +67,5 @@ frontend/.env*.local
 
 # TypeScript
 *.tsbuildinfo
+
+expo-env.d.ts
