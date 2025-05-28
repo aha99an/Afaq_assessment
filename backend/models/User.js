@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema({
     trim: true,
     default: ''
   },
+  topics: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Topic'
+  }],
   joinDate: {
     type: Date,
     default: Date.now
