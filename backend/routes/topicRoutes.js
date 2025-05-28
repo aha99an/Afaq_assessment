@@ -136,6 +136,34 @@ const auth = require('../middleware/auth');
  *                   $ref: '#/components/schemas/Topic'
  *       404:
  *         description: Topic not found
+ *   delete:
+ *     summary: Delete a topic by ID (only by owner)
+ *     tags: [Topics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The topic ID
+ *     responses:
+ *       200:
+ *         description: Topic deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       403:
+ *         description: Not authorized to delete this topic
+ *       404:
+ *         description: Topic not found
  */
 
 // Create a new topic (protected route)
@@ -146,5 +174,8 @@ router.get('/', topicController.getAllTopics);
 
 // Get a single topic
 router.get('/:id', topicController.getTopic);
+
+// Delete a topic (protected route, only by owner)
+router.delete('/:id', auth, topicController.deleteTopic);
 
 module.exports = router; 
