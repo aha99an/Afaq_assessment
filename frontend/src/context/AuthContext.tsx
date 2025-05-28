@@ -15,7 +15,7 @@ interface User {
 interface AuthContextType {
   token: string | null;
   user: User | null;
-  login: (token: string, userData: User) => Promise<void>;
+  signin: (token: string, userData: User) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (newToken: string, userData: User) => {
+  const signin = async (newToken: string, userData: User) => {
     try {
       await AsyncStorage.setItem('userToken', newToken);
       await AsyncStorage.setItem('userData', JSON.stringify(userData));
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ token, user, signin, logout, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

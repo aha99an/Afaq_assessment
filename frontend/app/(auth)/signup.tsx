@@ -56,7 +56,7 @@ const COUNTRIES = [
 ];
 
 export default function SignupScreen() {
-  const { login } = useAuth();
+  const { signin } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -104,7 +104,7 @@ export default function SignupScreen() {
       const data = await response.json();
 
       if (response.ok) {
-        await login(data.token, data.user);
+        await signin(data.token, data.user);
         router.replace('/(app)/profile');
       } else {
         if (data.errors) {
@@ -294,7 +294,7 @@ export default function SignupScreen() {
 
           <TouchableOpacity 
             style={styles.linkButton} 
-            onPress={() => router.push('/(auth)/login')}
+            onPress={() => router.push('/(auth)/signin')}
           >
             <Text style={styles.linkText}>Already have an account? Sign In</Text>
           </TouchableOpacity>

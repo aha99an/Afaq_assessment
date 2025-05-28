@@ -43,9 +43,9 @@ const auth = require('../middleware/auth');
 
 /**
  * @swagger
- * /auth/register:
+ * /auth/signup:
  *   post:
- *     summary: Register a new user
+ *     summary: signup a new user
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -71,7 +71,7 @@ const auth = require('../middleware/auth');
  *                 format: password
  *     responses:
  *       201:
- *         description: User registered successfully
+ *         description: User signuped successfully
  *         content:
  *           application/json:
  *             schema:
@@ -92,9 +92,9 @@ const auth = require('../middleware/auth');
 
 /**
  * @swagger
- * /auth/login:
+ * /auth/signin:
  *   post:
- *     summary: Login user
+ *     summary: signin user
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -114,7 +114,7 @@ const auth = require('../middleware/auth');
  *                 format: password
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: signin successful
  *         content:
  *           application/json:
  *             schema:
@@ -189,11 +189,11 @@ const auth = require('../middleware/auth');
  *         description: Unauthorized
  */
 
-// Register route
-router.post('/register', authController.register);
+// signup route
+router.post('/signup', authController.signup);
 
-// Login route
-router.post('/login', authController.login);
+// signin route
+router.post('/signin', authController.signin);
 
 // Get profile route (protected)
 router.get('/profile', auth, authController.getProfile);
