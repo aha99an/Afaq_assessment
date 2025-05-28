@@ -6,7 +6,7 @@ const Reply = require('../models/Reply');
 exports.createTopic = async (req, res) => {
   try {
     const { title, content } = req.body;
-    const userId = req.user._id; // Assuming you have authentication middleware
+    const userId = req.user._id;
 
     const topic = new Topic({
       title,
@@ -33,38 +33,48 @@ exports.createTopic = async (req, res) => {
   }
 };
 
-// Get all topics with optional user filter and pagination
+// Get all topics with pagination and filters
 exports.getAllTopics = async (req, res) => {
   try {
-    const { userId, page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc', search, category } = req.query;
+    
+    // Build query
     let query = {};
-
-    // If userId is provided, filter topics by that user
-    if (userId) {
-      query.author = userId;
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } }
+      ];
+    }
+    if (category) {
+      query.category = category;
     }
 
+    // Calculate pagination
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 10;
     const skip = (pageNum - 1) * limitNum;
 
+    // Get total count
     const total = await Topic.countDocuments(query);
+
+    // Get topics with populated fields
     const topics = await Topic.find(query)
       .populate('author', 'firstName lastName profilePhoto')
-      .sort({ updatedAt: -1 })
+      .populate({
+        path: 'replies',
+        populate: {
+          path: 'author',
+          select: 'firstName lastName profilePhoto'
+        }
+      })
+      .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
       .skip(skip)
       .limit(limitNum);
 
-    // Add reply count to each topic
-    const topicsWithReplyCount = topics.map(topic => {
-      const topicObj = topic.toObject();
-      topicObj.replyCount = topic.replies.length;
-      return topicObj;
-    });
-
     res.status(200).json({
       success: true,
-      data: topicsWithReplyCount,
+      data: topics,
       pagination: {
         total,
         page: pageNum,
