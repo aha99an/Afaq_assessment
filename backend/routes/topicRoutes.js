@@ -85,7 +85,7 @@ const auth = require('../middleware/auth');
  *       401:
  *         description: Unauthorized
  *   get:
- *     summary: Get all topics with optional user filter (sorted by most recent updates)
+ *     summary: Get all topics with optional user filter and pagination (sorted by most recent updates)
  *     tags: [Topics]
  *     parameters:
  *       - in: query
@@ -93,9 +93,21 @@ const auth = require('../middleware/auth');
  *         schema:
  *           type: string
  *         description: Filter topics by user ID (optional)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination (optional)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of topics per page (optional)
  *     responses:
  *       200:
- *         description: List of topics (filtered by user if userId is provided, sorted by most recent updates)
+ *         description: List of topics (filtered by user if userId is provided, paginated, sorted by most recent updates)
  *         content:
  *           application/json:
  *             schema:
@@ -107,6 +119,21 @@ const auth = require('../middleware/auth');
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Topic'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       description: Total number of topics
+ *                     page:
+ *                       type: integer
+ *                       description: Current page number
+ *                     limit:
+ *                       type: integer
+ *                       description: Number of topics per page
+ *                     totalPages:
+ *                       type: integer
+ *                       description: Total number of pages
  */
 
 /**

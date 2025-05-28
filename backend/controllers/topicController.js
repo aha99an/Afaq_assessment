@@ -33,10 +33,10 @@ exports.createTopic = async (req, res) => {
   }
 };
 
-// Get all topics with optional user filter
+// Get all topics with optional user filter and pagination
 exports.getAllTopics = async (req, res) => {
   try {
-    const { userId } = req.query;
+    const { userId, page = 1, limit = 10 } = req.query;
     let query = {};
 
     // If userId is provided, filter topics by that user
@@ -44,9 +44,16 @@ exports.getAllTopics = async (req, res) => {
       query.author = userId;
     }
 
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+    const skip = (pageNum - 1) * limitNum;
+
+    const total = await Topic.countDocuments(query);
     const topics = await Topic.find(query)
       .populate('author', 'firstName lastName profilePhoto')
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
 
     // Add reply count to each topic
     const topicsWithReplyCount = topics.map(topic => {
@@ -57,7 +64,13 @@ exports.getAllTopics = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: topicsWithReplyCount
+      data: topicsWithReplyCount,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum)
+      }
     });
   } catch (error) {
     res.status(400).json({
