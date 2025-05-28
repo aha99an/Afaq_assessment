@@ -6,6 +6,7 @@ export const changePasswordStyles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   content: {
+    flex: 1,
     padding: 20,
   },
   title: {
