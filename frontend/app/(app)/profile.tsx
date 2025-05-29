@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
@@ -59,6 +59,32 @@ export default function ProfileScreen() {
     profilePhoto: user?.profilePhoto || '',
   });
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user && token) {
+        try {
+          const response = await fetch(`${config.apiBaseUrl}/auth/profile`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success && data.data) {
+            await signin(token, data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
+      setInitialLoading(false);
+    };
+
+    fetchUserData();
+  }, [user, token, signin]);
 
   const handleLogout = async () => {
     await logout();
@@ -118,9 +144,13 @@ export default function ProfileScreen() {
 
       if (response.ok) {
         // Update the user data in context
-        await signin(token, data.user);
-        setIsEditing(false);
-        Alert.alert('Success', 'Profile updated successfully');
+        if (token) {
+          await signin(token, data.user);
+          setIsEditing(false);
+          Alert.alert('Success', 'Profile updated successfully');
+        } else {
+          Alert.alert('Error', 'Authentication token is missing');
+        }
       } else {
         Alert.alert('Error', data.message || 'Failed to update profile');
       }
@@ -131,7 +161,16 @@ export default function ProfileScreen() {
     }
   };
 
+  if (initialLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text>Loading profile...</Text>
+      </View>
+    );
+  }
+
   if (!user) {
+    router.replace('/(auth)/signin');
     return null;
   }
 
