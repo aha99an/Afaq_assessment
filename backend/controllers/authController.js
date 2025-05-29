@@ -165,23 +165,15 @@ const updateProfile = async (req, res) => {
     if (githubUrl) updateFields.githubUrl = githubUrl;
     if (country) updateFields.country = country;
 
-
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { $set: updateFields },
       { new: true }
     ).select('-password');
-    // Create JWT token
-    const token = jwt.sign(
-      { userId: user.id }, // Changed from id to userId to match auth middleware
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
 
     res.status(200).json({
       success: true,
       data: {
-        token,
         user: {
           id: user._id,
           firstName: user.firstName,
