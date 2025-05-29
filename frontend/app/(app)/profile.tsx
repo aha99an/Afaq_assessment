@@ -247,7 +247,7 @@ export default function ProfileScreen() {
               <View style={styles.infoRow}>
                 <Text style={styles.label}>Member Since</Text>
                 <Text style={styles.value}>
-                  {new Date(user.joinDate).toLocaleDateString('en-US', {
+                  {new Date(user.createdAt).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'

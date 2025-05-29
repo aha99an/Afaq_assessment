@@ -42,7 +42,12 @@ const signup = async (req, res) => {
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
-          profilePhoto: user.profilePhoto
+          profilePhoto: user.profilePhoto,
+          githubUrl: user.githubUrl,
+          country: user.country,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          joinDate: user.joinDate
         }
       }
     });
@@ -58,24 +63,20 @@ const signup = async (req, res) => {
 const signin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log('Signin attempt for email:', email);
 
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-      console.log('User not found for email:', email);
       return res.status(400).json({
         success: false,
         error: 'Invalid credentials'
       });
     }
-    console.log('User found:', { id: user._id, email: user.email });
 
     // Check password using the model's method
     const isMatch = await user.comparePassword(password);
     
     if (!isMatch) {
-      console.log('Password mismatch for user:', email);
       return res.status(400).json({
         success: false,
         error: 'Invalid credentials'
@@ -98,7 +99,12 @@ const signin = async (req, res) => {
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
-          profilePhoto: user.profilePhoto
+          profilePhoto: user.profilePhoto,
+          githubUrl: user.githubUrl,
+          country: user.country,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          joinDate: user.joinDate
         }
       }
     });
@@ -115,8 +121,6 @@ const signin = async (req, res) => {
 const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
-    console.log('User founddddddddd:', user);
-
         // Create JWT token
       const token = jwt.sign(
         { userId: user._id }, // Changed from id to userId to match auth middleware
@@ -134,7 +138,10 @@ const getProfile = async (req, res) => {
           email: user.email,
           profilePhoto: user.profilePhoto,
           githubUrl: user.githubUrl,
-          country: user.country
+          country: user.country,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          joinDate: user.joinDate
         }
       }
     });
@@ -182,7 +189,10 @@ const updateProfile = async (req, res) => {
           email: user.email,
           profilePhoto: user.profilePhoto,
           githubUrl: user.githubUrl,
-          country: user.country
+          country: user.country,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          joinDate: user.joinDate
         }
       }
     });
