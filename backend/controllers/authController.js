@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // signup a new user
-exports.signup = async (req, res) => {
+const signup = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
 
@@ -55,7 +55,7 @@ exports.signup = async (req, res) => {
 };
 
 // signin user
-exports.signin = async (req, res) => {
+const signin = async (req, res) => {
   try {
     const { email, password } = req.body;
     console.log('Signin attempt for email:', email);
@@ -112,7 +112,7 @@ exports.signin = async (req, res) => {
 };
 
 // Get current user profile
-exports.getProfile = async (req, res) => {
+const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     res.status(200).json({
@@ -128,7 +128,7 @@ exports.getProfile = async (req, res) => {
 };
 
 // Update user profile
-exports.updateProfile = async (req, res) => {
+const updateProfile = async (req, res) => {
   try {
     const { firstName, lastName, profilePhoto } = req.body;
     const updateFields = {};
@@ -156,7 +156,7 @@ exports.updateProfile = async (req, res) => {
 };
 
 // Change password
-exports.changePassword = async (req, res) => {
+const changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
 
