@@ -73,7 +73,6 @@ const signin = async (req, res) => {
 
     // Check password using the model's method
     const isMatch = await user.comparePassword(password);
-    console.log('Password match result:', isMatch);
     
     if (!isMatch) {
       console.log('Password mismatch for user:', email);
@@ -111,13 +110,33 @@ const signin = async (req, res) => {
   }
 };
 
+
 // Get current user profile
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user._id).select('-password');
+    console.log('User founddddddddd:', user);
+
+        // Create JWT token
+      const token = jwt.sign(
+        { userId: user._id }, // Changed from id to userId to match auth middleware
+        process.env.JWT_SECRET,
+        { expiresIn: '1d' }
+      );
     res.status(200).json({
       success: true,
-      data: user
+      data: {
+        token,
+        user: {
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          profilePhoto: user.profilePhoto,
+          githubUrl: user.githubUrl,
+          country: user.country
+        }
+      }
     });
   } catch (error) {
     res.status(400).json({
@@ -130,22 +149,42 @@ const getProfile = async (req, res) => {
 // Update user profile
 const updateProfile = async (req, res) => {
   try {
-    const { firstName, lastName, profilePhoto } = req.body;
+    const { firstName, lastName, profilePhoto, githubUrl, country } = req.body;
     const updateFields = {};
 
     if (firstName) updateFields.firstName = firstName;
     if (lastName) updateFields.lastName = lastName;
     if (profilePhoto) updateFields.profilePhoto = profilePhoto;
+    if (githubUrl) updateFields.githubUrl = githubUrl;
+    if (country) updateFields.country = country;
+
 
     const user = await User.findByIdAndUpdate(
-      req.user.id,
+      req.user._id,
       { $set: updateFields },
       { new: true }
     ).select('-password');
+    // Create JWT token
+    const token = jwt.sign(
+      { userId: user.id }, // Changed from id to userId to match auth middleware
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
 
     res.status(200).json({
       success: true,
-      data: user
+      data: {
+        token,
+        user: {
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          profilePhoto: user.profilePhoto,
+          githubUrl: user.githubUrl,
+          country: user.country
+        }
+      }
     });
   } catch (error) {
     res.status(400).json({

@@ -126,7 +126,7 @@ export default function ProfileScreen() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${config.apiBaseUrl}/auth/update-profile`, {
+      const response = await fetch(`${config.apiBaseUrl}/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

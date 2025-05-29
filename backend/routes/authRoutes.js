@@ -174,6 +174,10 @@ const { changePasswordValidation } = require('../middleware/validators');
  *                 type: string
  *               profilePhoto:
  *                 type: string
+ *               githubUrl:
+ *                 type: string
+ *               country:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Profile updated successfully
