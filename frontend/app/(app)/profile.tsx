@@ -49,7 +49,7 @@ const COUNTRIES = [
 ];
 
 export default function ProfileScreen() {
-  const { user, token, login, logout } = useAuth();
+  const { user, token, signin, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState({
     firstName: user?.firstName || '',
@@ -62,7 +62,7 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     await logout();
-    router.replace('/(auth)/login');
+    router.replace('/(auth)/signin');
   };
 
   const handleEdit = () => {
@@ -118,7 +118,7 @@ export default function ProfileScreen() {
 
       if (response.ok) {
         // Update the user data in context
-        await login(token, data.user);
+        await signin(token, data.user);
         setIsEditing(false);
         Alert.alert('Success', 'Profile updated successfully');
       } else {

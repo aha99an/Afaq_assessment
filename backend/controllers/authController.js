@@ -2,8 +2,8 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Register a new user
-exports.register = async (req, res) => {
+// signup a new user
+const signup = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
 
@@ -24,15 +24,11 @@ exports.register = async (req, res) => {
       password
     });
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
-
     await user.save();
 
     // Create JWT token
     const token = jwt.sign(
-      { id: user._id },
+      { userId: user._id }, // Changed from id to userId to match auth middleware
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
@@ -58,23 +54,29 @@ exports.register = async (req, res) => {
   }
 };
 
-// Login user
-exports.login = async (req, res) => {
+// signin user
+const signin = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('Signin attempt for email:', email);
 
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
+      console.log('User not found for email:', email);
       return res.status(400).json({
         success: false,
         error: 'Invalid credentials'
       });
     }
+    console.log('User found:', { id: user._id, email: user.email });
 
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Check password using the model's method
+    const isMatch = await user.comparePassword(password);
+    console.log('Password match result:', isMatch);
+    
     if (!isMatch) {
+      console.log('Password mismatch for user:', email);
       return res.status(400).json({
         success: false,
         error: 'Invalid credentials'
@@ -83,7 +85,7 @@ exports.login = async (req, res) => {
 
     // Create JWT token
     const token = jwt.sign(
-      { id: user._id },
+      { userId: user._id }, // Changed from id to userId to match auth middleware
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
@@ -110,7 +112,7 @@ exports.login = async (req, res) => {
 };
 
 // Get current user profile
-exports.getProfile = async (req, res) => {
+const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     res.status(200).json({
@@ -126,7 +128,7 @@ exports.getProfile = async (req, res) => {
 };
 
 // Update user profile
-exports.updateProfile = async (req, res) => {
+const updateProfile = async (req, res) => {
   try {
     const { firstName, lastName, profilePhoto } = req.body;
     const updateFields = {};
@@ -151,4 +153,53 @@ exports.updateProfile = async (req, res) => {
       error: error.message
     });
   }
+};
+
+// Change password
+const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    // Get user
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Verify old password
+    const isMatch = await user.comparePassword(oldPassword);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid old password'
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    console.error('Password change error:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
+
+module.exports = {
+  signup,
+  signin,
+  getProfile,
+  updateProfile,
+  changePassword
 }; 

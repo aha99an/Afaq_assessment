@@ -6,5 +6,5 @@ export default function Index() {
   const { isAuthenticated } = useAuth();
 
   // Redirect to the appropriate screen based on authentication status
-  return <Redirect href={isAuthenticated ? '/(app)/profile' : '/(auth)/login'} />;
+  return <Redirect href={isAuthenticated ? '/(app)/profile' : '/(auth)/signin'} />;
 }

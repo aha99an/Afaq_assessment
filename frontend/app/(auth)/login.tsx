@@ -14,8 +14,8 @@ interface ValidationError {
   location: string;
 }
 
-export default function LoginScreen() {
-  const { login } = useAuth();
+export default function signinScreen() {
+  const { signin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ export default function LoginScreen() {
   const [generalError, setGeneralError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = async () => {
+  const handlesignin = async () => {
     try {
       setLoading(true);
       setErrors({});
@@ -40,7 +40,7 @@ export default function LoginScreen() {
       const data = await response.json();
 
       if (response.ok) {
-        await login(data.token, data.user);
+        await signin(data.token, data.user);
         router.replace('/(app)/profile');
       } else {
         if (data.errors) {
@@ -54,7 +54,7 @@ export default function LoginScreen() {
           // Handle general error message
           setGeneralError(data.message);
         } else {
-          setGeneralError('Failed to login');
+          setGeneralError('Failed to signin');
         }
       }
     } catch (error) {
@@ -72,7 +72,7 @@ export default function LoginScreen() {
     >
       <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.form}>
-          <Text style={styles.title}>Login</Text>
+          <Text style={styles.title}>signin</Text>
           
           {generalError ? (
             <View style={styles.errorContainer}>
@@ -127,10 +127,10 @@ export default function LoginScreen() {
 
           <TouchableOpacity 
             style={[styles.button, loading && styles.buttonDisabled]} 
-            onPress={handleLogin}
+            onPress={handlesignin}
             disabled={loading}
           >
-            <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Login'}</Text>
+            <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'signin'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 

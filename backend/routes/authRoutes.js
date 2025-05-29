@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const auth = require('../middleware/auth');
+const { changePasswordValidation } = require('../middleware/validators');
 
 /**
  * @swagger
@@ -43,9 +44,9 @@ const auth = require('../middleware/auth');
 
 /**
  * @swagger
- * /auth/register:
+ * /auth/signup:
  *   post:
- *     summary: Register a new user
+ *     summary: signup a new user
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -71,7 +72,7 @@ const auth = require('../middleware/auth');
  *                 format: password
  *     responses:
  *       201:
- *         description: User registered successfully
+ *         description: User signuped successfully
  *         content:
  *           application/json:
  *             schema:
@@ -92,9 +93,9 @@ const auth = require('../middleware/auth');
 
 /**
  * @swagger
- * /auth/login:
+ * /auth/signin:
  *   post:
- *     summary: Login user
+ *     summary: signin user
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -114,7 +115,7 @@ const auth = require('../middleware/auth');
  *                 format: password
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: signin successful
  *         content:
  *           application/json:
  *             schema:
@@ -189,16 +190,52 @@ const auth = require('../middleware/auth');
  *         description: Unauthorized
  */
 
-// Register route
-router.post('/register', authController.register);
+/**
+ * @swagger
+ * /auth/change-password:
+ *   post:
+ *     summary: Change user password
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - oldPassword
+ *               - newPassword
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *                 minLength: 8
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *       401:
+ *         description: Invalid old password
+ *       400:
+ *         description: Invalid input
+ */
 
-// Login route
-router.post('/login', authController.login);
+// signup route
+router.post('/signup', authController.signup);
+
+// signin route
+router.post('/signin', authController.signin);
 
 // Get profile route (protected)
 router.get('/profile', auth, authController.getProfile);
 
 // Update profile route (protected)
 router.put('/profile', auth, authController.updateProfile);
+
+// Change password route (protected)
+router.post('/change-password', auth, changePasswordValidation, authController.changePassword);
 
 module.exports = router; 
