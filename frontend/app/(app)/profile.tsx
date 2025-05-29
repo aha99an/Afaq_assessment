@@ -49,7 +49,7 @@ const COUNTRIES = [
 ];
 
 export default function ProfileScreen() {
-  const { user, token, signin, logout } = useAuth();
+  const { user, token, signin, updateUser, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState({
     firstName: user?.firstName || '',
@@ -145,7 +145,7 @@ export default function ProfileScreen() {
       if (response.ok) {
         // Update the user data in context
         if (token) {
-          await signin(token, data.user);
+          await updateUser(data.data.user);
           setIsEditing(false);
           Alert.alert('Success', 'Profile updated successfully');
         } else {
@@ -247,7 +247,7 @@ export default function ProfileScreen() {
               <View style={styles.infoRow}>
                 <Text style={styles.label}>Member Since</Text>
                 <Text style={styles.value}>
-                  {new Date(user.createdAt).toLocaleDateString('en-US', {
+                  {new Date(user.joinDate).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
