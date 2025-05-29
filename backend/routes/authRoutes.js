@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const auth = require('../middleware/auth');
+const { changePasswordValidation } = require('../middleware/validators');
 
 /**
  * @swagger
@@ -189,6 +190,39 @@ const auth = require('../middleware/auth');
  *         description: Unauthorized
  */
 
+/**
+ * @swagger
+ * /auth/change-password:
+ *   post:
+ *     summary: Change user password
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - oldPassword
+ *               - newPassword
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *                 minLength: 8
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *       401:
+ *         description: Invalid old password
+ *       400:
+ *         description: Invalid input
+ */
+
 // signup route
 router.post('/signup', authController.signup);
 
@@ -200,5 +234,8 @@ router.get('/profile', auth, authController.getProfile);
 
 // Update profile route (protected)
 router.put('/profile', auth, authController.updateProfile);
+
+// Change password route (protected)
+router.post('/change-password', auth, changePasswordValidation, authController.changePassword);
 
 module.exports = router; 
