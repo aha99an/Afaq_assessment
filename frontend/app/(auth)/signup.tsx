@@ -104,8 +104,12 @@ export default function SignupScreen() {
       const data = await response.json();
 
       if (response.ok) {
-        await signin(data.token, data.user);
-        router.replace('/(app)/profile');
+        if (data.success && data.data) {
+          await signin(data.data.token, data.data.user);
+          router.replace('/(app)/profile');
+        } else {
+          setGeneralError('Invalid response format from server');
+        }
       } else {
         if (data.errors) {
           // Handle validation errors

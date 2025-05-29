@@ -14,7 +14,7 @@ interface ValidationError {
   location: string;
 }
 
-export default function signinScreen() {
+export default function SigninScreen() {
   const { signin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,7 +23,7 @@ export default function signinScreen() {
   const [generalError, setGeneralError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handlesignin = async () => {
+  const handleSignin = async () => {
     try {
       setLoading(true);
       setErrors({});
@@ -40,8 +40,12 @@ export default function signinScreen() {
       const data = await response.json();
 
       if (response.ok) {
-        await signin(data.token, data.user);
-        router.replace('/(app)/profile');
+        if (data.success && data.data) {
+          await signin(data.data.token, data.data.user);
+          router.replace('/(app)/profile');
+        } else {
+          setGeneralError('Invalid response format from server');
+        }
       } else {
         if (data.errors) {
           // Handle validation errors
@@ -54,11 +58,11 @@ export default function signinScreen() {
           // Handle general error message
           setGeneralError(data.message);
         } else {
-          setGeneralError('Failed to signin');
+          setGeneralError('Failed to sign in');
         }
       }
     } catch (error) {
-      setGeneralError('An error occurred while logging in');
+      setGeneralError('An error occurred while signing in');
     } finally {
       setLoading(false);
     }
@@ -72,7 +76,7 @@ export default function signinScreen() {
     >
       <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.form}>
-          <Text style={styles.title}>signin</Text>
+          <Text style={styles.title}>Sign In</Text>
           
           {generalError ? (
             <View style={styles.errorContainer}>
@@ -127,10 +131,10 @@ export default function signinScreen() {
 
           <TouchableOpacity 
             style={[styles.button, loading && styles.buttonDisabled]} 
-            onPress={handlesignin}
+            onPress={handleSignin}
             disabled={loading}
           >
-            <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'signin'}</Text>
+            <Text style={styles.buttonText}>{loading ? 'Signing in...' : 'Sign In'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
