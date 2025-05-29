@@ -16,6 +16,7 @@ interface AuthContextType {
   token: string | null;
   user: User | null;
   signin: (token: string, userData: User) => Promise<void>;
+  updateUser: (userData: User) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -59,6 +60,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUser = async (userData: User) => {
+    try {
+      await AsyncStorage.setItem('userData', JSON.stringify(userData));
+      setUser(userData);
+    } catch (error) {
+      console.error('Error updating user data:', error);
+    }
+  };
+
   const logout = async () => {
     try {
       await AsyncStorage.removeItem('userToken');
@@ -72,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, signin, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ token, user, signin, updateUser, logout, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

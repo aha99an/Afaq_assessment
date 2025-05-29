@@ -49,7 +49,7 @@ const COUNTRIES = [
 ];
 
 export default function ProfileScreen() {
-  const { user, token, signin, logout } = useAuth();
+  const { user, token, signin, updateUser, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState({
     firstName: user?.firstName || '',
@@ -126,7 +126,7 @@ export default function ProfileScreen() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${config.apiBaseUrl}/auth/update-profile`, {
+      const response = await fetch(`${config.apiBaseUrl}/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -145,7 +145,7 @@ export default function ProfileScreen() {
       if (response.ok) {
         // Update the user data in context
         if (token) {
-          await signin(token, data.user);
+          await updateUser(data.data.user);
           setIsEditing(false);
           Alert.alert('Success', 'Profile updated successfully');
         } else {
