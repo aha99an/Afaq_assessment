@@ -136,6 +136,35 @@ const { changePasswordValidation } = require('../middleware/validators');
 
 /**
  * @swagger
+ * /auth/profile/{userId}:
+ *   get:
+ *     summary: Get user profile by ID
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user to get profile for
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       404:
+ *         description: User not found
+ */
+
+/**
+ * @swagger
  * /auth/profile:
  *   get:
  *     summary: Get current user profile
@@ -234,7 +263,7 @@ router.post('/signup', authController.signup);
 router.post('/signin', authController.signin);
 
 // Get profile route (protected)
-router.get('/profile', auth, authController.getProfile);
+router.get('/profile/:userId', auth, authController.getProfile);
 
 // Update profile route (protected)
 router.put('/profile', auth, authController.updateProfile);

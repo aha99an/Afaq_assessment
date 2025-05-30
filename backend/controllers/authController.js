@@ -116,33 +116,31 @@ const signin = async (req, res) => {
   }
 };
 
-
-// Get current user profile
+// Get user profile by ID
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
-        // Create JWT token
-      const token = jwt.sign(
-        { userId: user._id }, // Changed from id to userId to match auth middleware
-        process.env.JWT_SECRET,
-        { expiresIn: '1d' }
-      );
+    const user = await User.findById(req.params.userId).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
     res.status(200).json({
       success: true,
       data: {
-        token,
-        user: {
-          id: user._id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          profilePhoto: user.profilePhoto,
-          githubUrl: user.githubUrl,
-          country: user.country,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-          joinDate: user.joinDate
-        }
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        profilePhoto: user.profilePhoto,
+        githubUrl: user.githubUrl,
+        country: user.country,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        joinDate: user.joinDate
       }
     });
   } catch (error) {
