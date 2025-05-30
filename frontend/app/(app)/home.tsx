@@ -167,7 +167,7 @@ export default function HomeScreen() {
         <Text style={styles.headerTitle}>Topics</Text>
         <TouchableOpacity 
           style={styles.newTopicButton}
-          onPress={() => router.push('../../app/(app)/new-topic')}
+          onPress={() => router.push('/topic/new-topic')}
         >
           <Text style={styles.newTopicButtonText}>New Topic</Text>
         </TouchableOpacity>
