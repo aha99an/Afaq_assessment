@@ -55,13 +55,17 @@ const ReplyAuthors = ({ replies }: { replies: Reply[] }) => {
     .filter((author): author is ReplyAuthor => author !== undefined)
     .slice(0, 5);
 
+  const handleAuthorPress = (authorId: string) => {
+    router.push(`/user-profile?id=${authorId}`);
+  };
+
   return (
     <View style={styles.replyAuthorsContainer}>
       {uniqueAuthors.map((author) => (
         <TouchableOpacity
           key={author._id}
           style={styles.replyAuthorWrapper}
-          onPress={() => setSelectedAuthor(selectedAuthor === author._id ? null : author._id)}
+          onPress={() => handleAuthorPress(author._id)}
         >
           <Image
             source={{ uri: author.profilePhoto || DEFAULT_PROFILE_PHOTO }}
