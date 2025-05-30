@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, TouchableOpacity, TextInput } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '../../../src/context/AuthContext';
 import config from '../../../src/config';
@@ -45,6 +45,8 @@ export default function TopicDetailsScreen() {
   const { token } = useAuth();
   const [topic, setTopic] = useState<Topic | null>(null);
   const [loading, setLoading] = useState(true);
+  const [replyContent, setReplyContent] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const navigateToProfile = (userId: string) => {
     router.push(`/user-profile?id=${userId}`);
@@ -71,6 +73,43 @@ export default function TopicDetailsScreen() {
     };
     if (id) fetchTopic();
   }, [id]);
+
+  const handleSubmitReply = async () => {
+    if (!replyContent.trim()) return;
+    
+    setSubmitting(true);
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/replies`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          content: replyContent,
+          topicId: id
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        // Add the new reply to the topic's replies array
+        setTopic(prevTopic => {
+          if (!prevTopic) return null;
+          return {
+            ...prevTopic,
+            replies: [data.data, ...prevTopic.replies]
+          };
+        });
+        setReplyContent(''); // Clear the input
+      }
+    } catch (error) {
+      console.error('Error submitting reply:', error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -130,6 +169,28 @@ export default function TopicDetailsScreen() {
       ) : (
         <Text style={styles.noReplies}>No replies yet.</Text>
       )}
+      
+      <View style={styles.replyInputContainer}>
+        <TextInput
+          style={styles.replyInput}
+          placeholder="Write your reply..."
+          value={replyContent}
+          onChangeText={setReplyContent}
+          multiline
+          numberOfLines={3}
+        />
+        <TouchableOpacity 
+          style={[styles.submitButton, (!replyContent.trim() || submitting) && styles.submitButtonDisabled]}
+          onPress={handleSubmitReply}
+          disabled={!replyContent.trim() || submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.submitButtonText}>Post Reply</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
@@ -234,5 +295,33 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 8,
     marginBottom: 24,
+  },
+  replyInputContainer: {
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  replyInput: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 100,
+    textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    marginBottom: 12,
+  },
+  submitButton: {
+    backgroundColor: '#007AFF',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 }); 
