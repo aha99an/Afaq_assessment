@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '../../../src/context/AuthContext';
 import config from '../../../src/config';
 
@@ -46,6 +46,10 @@ export default function TopicDetailsScreen() {
   const [topic, setTopic] = useState<Topic | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const navigateToProfile = (userId: string) => {
+    router.push(`/user-profile?id=${userId}`);
+  };
+
   useEffect(() => {
     const fetchTopic = async () => {
       setLoading(true);
@@ -87,12 +91,16 @@ export default function TopicDetailsScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Image
-          source={{ uri: topic.author?.profilePhoto || DEFAULT_PROFILE_PHOTO }}
-          style={styles.authorPhoto}
-        />
+        <TouchableOpacity onPress={() => navigateToProfile(topic.author._id)}>
+          <Image
+            source={{ uri: topic.author?.profilePhoto || DEFAULT_PROFILE_PHOTO }}
+            style={styles.authorPhoto}
+          />
+        </TouchableOpacity>
         <View>
-          <Text style={styles.authorName}>{topic.author?.firstName} {topic.author?.lastName}</Text>
+          <TouchableOpacity onPress={() => navigateToProfile(topic.author._id)}>
+            <Text style={styles.authorName}>{topic.author?.firstName} {topic.author?.lastName}</Text>
+          </TouchableOpacity>
           <Text style={styles.dateText}>Posted on {formatDate(topic.createdAt)}</Text>
         </View>
       </View>
@@ -102,13 +110,17 @@ export default function TopicDetailsScreen() {
       {topic.replies && topic.replies.length > 0 ? (
         topic.replies.map((reply: Reply) => (
           <View key={reply._id} style={styles.replyCard}>
-            <Image
-              source={{ uri: reply.author?.profilePhoto || DEFAULT_PROFILE_PHOTO }}
-              style={styles.replyAuthorPhoto}
-            />
+            <TouchableOpacity onPress={() => navigateToProfile(reply.author._id)}>
+              <Image
+                source={{ uri: reply.author?.profilePhoto || DEFAULT_PROFILE_PHOTO }}
+                style={styles.replyAuthorPhoto}
+              />
+            </TouchableOpacity>
             <View style={styles.replyContent}>
               <View style={styles.replyHeader}>
-                <Text style={styles.replyAuthorName}>{reply.author?.firstName} {reply.author?.lastName}</Text>
+                <TouchableOpacity onPress={() => navigateToProfile(reply.author._id)}>
+                  <Text style={styles.replyAuthorName}>{reply.author?.firstName} {reply.author?.lastName}</Text>
+                </TouchableOpacity>
                 <Text style={styles.replyDate}>{formatDate(reply.createdAt)}</Text>
               </View>
               <Text style={styles.replyText}>{reply.content}</Text>
@@ -150,6 +162,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
+    textDecorationLine: 'underline',
   },
   dateText: {
     fontSize: 12,
@@ -206,6 +219,7 @@ const styles = StyleSheet.create({
   replyAuthorName: {
     fontWeight: 'bold',
     color: '#333',
+    textDecorationLine: 'underline',
   },
   replyDate: {
     fontSize: 12,
