@@ -4,6 +4,25 @@ import { router } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import config from '../../src/config';
 
+interface ReplyAuthor {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  profilePhoto: string;
+  githubUrl: string;
+  country: string;
+}
+
+interface Reply {
+  _id: string;
+  content: string;
+  author: ReplyAuthor;
+  topic: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Topic {
   _id: string;
   title: string;
@@ -15,7 +34,7 @@ interface Topic {
     profilePhoto: string;
   };
   views: number;
-  replies: any[];
+  replies: Reply[];
   createdAt: string;
   updatedAt: string;
 }
@@ -28,6 +47,65 @@ interface PaginationData {
 }
 
 const DEFAULT_PROFILE_PHOTO = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
+
+const ReplyAuthors = ({ replies }: { replies: Reply[] }) => {
+  const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
+  const uniqueAuthors = Array.from(new Set(replies.map(reply => reply.author._id)))
+    .map(id => replies.find(reply => reply.author._id === id)?.author)
+    .filter((author): author is ReplyAuthor => author !== undefined)
+    .slice(0, 5);
+
+  return (
+    <View style={styles.replyAuthorsContainer}>
+      {uniqueAuthors.map((author) => (
+        <TouchableOpacity
+          key={author._id}
+          style={styles.replyAuthorWrapper}
+          onPress={() => setSelectedAuthor(selectedAuthor === author._id ? null : author._id)}
+        >
+          <Image
+            source={{ uri: author.profilePhoto || DEFAULT_PROFILE_PHOTO }}
+            style={styles.replyAuthorPhoto}
+          />
+          {selectedAuthor === author._id && (
+            <View style={styles.replyAuthorTooltip}>
+              <Text style={styles.replyAuthorEmail}>{author.email}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      ))}
+      {replies.length > 5 && (
+        <View style={styles.moreReplies}>
+          <Text style={styles.moreRepliesText}>+{replies.length - 5}</Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const formatActivityTime = (dateString: string) => {
+  const now = new Date();
+  const updatedAt = new Date(dateString);
+  const diffInMs = now.getTime() - updatedAt.getTime();
+  
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  if (diffInMinutes < 60) {
+    return `active ${diffInMinutes}m ago`;
+  } else if (diffInHours < 24) {
+    return `active ${diffInHours}h ago`;
+  } else if (diffInDays < 7) {
+    const remainingHours = Math.floor((diffInMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    if (remainingHours > 0) {
+      return `active ${diffInDays}d ${remainingHours}h ago`;
+    }
+    return `active ${diffInDays}d ago`;
+  } else {
+    return `active ${Math.floor(diffInDays / 7)}w ago`;
+  }
+};
 
 export default function HomeScreen() {
   const { token } = useAuth();
@@ -75,14 +153,6 @@ export default function HomeScreen() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
   if (loading && topics.length === 0) {
     return (
       <View style={[styles.container, styles.centered]}>
@@ -94,7 +164,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Discussion Topics</Text>
+        <Text style={styles.headerTitle}>Topics</Text>
         <TouchableOpacity 
           style={styles.newTopicButton}
           onPress={() => router.push('../../app/(app)/new-topic')}
@@ -104,23 +174,17 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView style={styles.topicsList}>
-        {topics.map((topic) => (
+        {topics.map((topic, index) => (
           <TouchableOpacity
             key={topic._id}
             style={styles.topicCard}
             onPress={() => router.push(`../../app/(app)/topic/${topic._id}`)}
           >
             <View style={styles.topicHeader}>
-              <View style={styles.authorInfo}>
-                <Image
-                  source={{ uri: topic.author.profilePhoto || DEFAULT_PROFILE_PHOTO }}
-                  style={styles.authorPhoto}
-                />
-                <Text style={styles.authorName}>
-                  {`${topic.author.firstName} ${topic.author.lastName}`}
-                </Text>
+              <View style={styles.topicNumberContainer}>
+                <Text style={styles.topicNumber}>#{((pagination.page - 1) * pagination.limit) + index + 1}</Text>
               </View>
-              <Text style={styles.date}>{formatDate(topic.updatedAt)}</Text>
+              <Text style={styles.activityTime}>{formatActivityTime(topic.updatedAt)}</Text>
             </View>
 
             <Text style={styles.topicTitle}>{topic.title}</Text>
@@ -135,6 +199,13 @@ export default function HomeScreen() {
                 <Text style={styles.statLabel}>Replies</Text>
               </View>
             </View>
+
+            {topic.replies.length > 0 && (
+              <View style={styles.repliesSection}>
+                <Text style={styles.repliesLabel}>Recent Replies:</Text>
+                <ReplyAuthors replies={topic.replies} />
+              </View>
+            )}
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -221,23 +292,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  authorInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  topicNumberContainer: {
+    backgroundColor: '#007AFF',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
-  authorPhoto: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 10,
-  },
-  authorName: {
+  topicNumber: {
+    color: '#fff',
     fontSize: 14,
-    color: '#666',
+    fontWeight: 'bold',
   },
-  date: {
+  activityTime: {
     fontSize: 12,
-    color: '#999',
+    color: '#666',
   },
   topicTitle: {
     fontSize: 18,
@@ -290,6 +358,63 @@ const styles = StyleSheet.create({
   },
   pageInfo: {
     fontSize: 14,
+    color: '#666',
+  },
+  repliesSection: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  repliesLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  replyAuthorsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  replyAuthorWrapper: {
+    marginRight: -8,
+    position: 'relative',
+  },
+  replyAuthorPhoto: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  replyAuthorTooltip: {
+    position: 'absolute',
+    bottom: '100%',
+    left: '50%',
+    transform: [{ translateX: -50 }],
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    padding: 6,
+    borderRadius: 4,
+    marginBottom: 4,
+    zIndex: 1,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  replyAuthorEmail: {
+    color: '#fff',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  moreReplies: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  moreRepliesText: {
+    fontSize: 12,
     color: '#666',
   },
 }); 
