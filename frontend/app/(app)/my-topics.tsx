@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import config from '../../src/config';
@@ -18,6 +18,8 @@ export default function MyTopicsScreen() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   const fetchTopics = async (pageNum: number) => {
     if (!user?.id || !token) return;
@@ -61,10 +63,91 @@ export default function MyTopicsScreen() {
     }
   };
 
+  const handleLongPress = (topicId: string) => {
+    setIsSelectionMode(true);
+    setSelectedTopics([topicId]);
+  };
+
+  const handlePress = (topicId: string) => {
+    if (isSelectionMode) {
+      setSelectedTopics(prev => {
+        if (prev.includes(topicId)) {
+          const newSelected = prev.filter(id => id !== topicId);
+          if (newSelected.length === 0) {
+            setIsSelectionMode(false);
+          }
+          return newSelected;
+        } else {
+          return [...prev, topicId];
+        }
+      });
+    } else {
+      router.push(`/topic/topic-details?id=${topicId}` as any);
+    }
+  };
+
+  const handleDelete = () => {
+    if (selectedTopics.length === 0) return;
+
+    // Use window.confirm for web
+    const confirmMessage = `Are you sure you want to delete ${selectedTopics.length} topic${selectedTopics.length > 1 ? 's' : ''}?`;
+    const isConfirmed = window.confirm(confirmMessage);
+
+    if (isConfirmed) {
+      const deleteTopics = async () => {
+        try {
+          setLoading(true);
+          console.log('Starting delete process...');
+          
+          const deletePromises = selectedTopics.map(async (topicId) => {
+            console.log(`Attempting to delete topic: ${topicId}`);
+            const response = await fetch(`${config.apiBaseUrl}/topics/${topicId}`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+            });
+            
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error || 'Failed to delete topic');
+            }
+            
+            return response.json();
+          });
+
+          const results = await Promise.all(deletePromises);
+          console.log('Delete results:', results);
+          
+          // Show success message
+          window.alert(`Successfully deleted ${selectedTopics.length} topic${selectedTopics.length > 1 ? 's' : ''}`);
+          
+          setTopics(prev => prev.filter(topic => !selectedTopics.includes(topic._id)));
+          setSelectedTopics([]);
+          setIsSelectionMode(false);
+        } catch (error) {
+          console.error('Error deleting topics:', error);
+          // Show error message
+          window.alert(error instanceof Error ? error.message : 'Failed to delete topics. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      deleteTopics();
+    }
+  };
+
   const renderTopic = ({ item }: { item: Topic }) => (
     <TouchableOpacity
-      style={styles.topicItem}
-      onPress={() => router.push(`/topic/topic-details?id=${item._id}` as any)}
+      style={[
+        styles.topicItem,
+        selectedTopics.includes(item._id) && styles.selectedTopic
+      ]}
+      onPress={() => handlePress(item._id)}
+      onLongPress={() => handleLongPress(item._id)}
+      delayLongPress={500}
     >
       <Text style={styles.topicTitle}>{item.title}</Text>
       <Text style={styles.topicMeta}>
@@ -76,10 +159,29 @@ export default function MyTopicsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Topics</Text>
+        {isSelectionMode ? (
+          <>
+            <TouchableOpacity onPress={() => {
+              setSelectedTopics([]);
+              setIsSelectionMode(false);
+            }} style={styles.backButton}>
+              <Text style={styles.backButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>
+              {selectedTopics.length} selected
+            </Text>
+            <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Text style={styles.backButtonText}>← Back</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>My Topics</Text>
+          </>
+        )}
       </View>
 
       {loading && page === 1 ? (
@@ -179,5 +281,18 @@ const styles = StyleSheet.create({
   },
   footerLoader: {
     paddingVertical: 20,
+  },
+  selectedTopic: {
+    backgroundColor: '#e3f2fd',
+    borderColor: '#2196f3',
+    borderWidth: 1,
+  },
+  deleteButton: {
+    marginLeft: 'auto',
+  },
+  deleteButtonText: {
+    color: '#ff3b30',
+    fontSize: 16,
+    fontWeight: '500',
   },
 }); 

@@ -20,6 +20,8 @@ export default function MyRepliesScreen() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedReplies, setSelectedReplies] = useState<string[]>([]);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   const fetchReplies = async (pageNum: number) => {
     if (!user?.id || !token) return;
@@ -63,10 +65,88 @@ export default function MyRepliesScreen() {
     }
   };
 
+  const handleLongPress = (replyId: string) => {
+    setIsSelectionMode(true);
+    setSelectedReplies([replyId]);
+  };
+
+  const handlePress = (replyId: string) => {
+    if (isSelectionMode) {
+      setSelectedReplies(prev => {
+        if (prev.includes(replyId)) {
+          const newSelected = prev.filter(id => id !== replyId);
+          if (newSelected.length === 0) {
+            setIsSelectionMode(false);
+          }
+          return newSelected;
+        } else {
+          return [...prev, replyId];
+        }
+      });
+    } else {
+      const reply = replies.find(r => r._id === replyId);
+      if (reply) {
+        router.push(`/topic/topic-details?id=${reply.topic._id}` as any);
+      }
+    }
+  };
+
+  const handleDelete = () => {
+    if (selectedReplies.length === 0) return;
+
+    const confirmMessage = `Are you sure you want to delete ${selectedReplies.length} reply${selectedReplies.length > 1 ? 's' : ''}?`;
+    const isConfirmed = window.confirm(confirmMessage);
+
+    if (isConfirmed) {
+      const deleteReplies = async () => {
+        try {
+          setLoading(true);
+          
+          const deletePromises = selectedReplies.map(async (replyId) => {
+            const response = await fetch(`${config.apiBaseUrl}/replies/${replyId}`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+            });
+            
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error || 'Failed to delete reply');
+            }
+            
+            return response.json();
+          });
+
+          await Promise.all(deletePromises);
+          
+          window.alert(`Successfully deleted ${selectedReplies.length} reply${selectedReplies.length > 1 ? 's' : ''}`);
+          
+          setReplies(prev => prev.filter(reply => !selectedReplies.includes(reply._id)));
+          setSelectedReplies([]);
+          setIsSelectionMode(false);
+        } catch (error) {
+          console.error('Error deleting replies:', error);
+          window.alert(error instanceof Error ? error.message : 'Failed to delete replies. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      deleteReplies();
+    }
+  };
+
   const renderReply = ({ item }: { item: Reply }) => (
     <TouchableOpacity
-      style={styles.replyItem}
-      onPress={() => router.push(`/topic/topic-details?id=${item.topic._id}` as any)}
+      style={[
+        styles.replyItem,
+        selectedReplies.includes(item._id) && styles.selectedReply
+      ]}
+      onPress={() => handlePress(item._id)}
+      onLongPress={() => handleLongPress(item._id)}
+      delayLongPress={500}
     >
       <Text style={styles.replyContent} numberOfLines={3}>
         {item.content}
@@ -80,10 +160,29 @@ export default function MyRepliesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Replies</Text>
+        {isSelectionMode ? (
+          <>
+            <TouchableOpacity onPress={() => {
+              setSelectedReplies([]);
+              setIsSelectionMode(false);
+            }} style={styles.backButton}>
+              <Text style={styles.backButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>
+              {selectedReplies.length} selected
+            </Text>
+            <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Text style={styles.backButtonText}>← Back</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>My Replies</Text>
+          </>
+        )}
       </View>
 
       {loading && page === 1 ? (
@@ -182,5 +281,18 @@ const styles = StyleSheet.create({
   },
   footerLoader: {
     paddingVertical: 20,
+  },
+  selectedReply: {
+    backgroundColor: '#e3f2fd',
+    borderColor: '#2196f3',
+    borderWidth: 1,
+  },
+  deleteButton: {
+    marginLeft: 'auto',
+  },
+  deleteButtonText: {
+    color: '#ff3b30',
+    fontSize: 16,
+    fontWeight: '500',
   },
 }); 
