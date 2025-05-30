@@ -173,12 +173,20 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Topics</Text>
-        <TouchableOpacity 
-          style={styles.newTopicButton}
-          onPress={() => router.push('/topic/new-topic')}
-        >
-          <Text style={styles.newTopicButtonText}>New Topic</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity 
+            style={styles.profileButton}
+            onPress={() => router.push('/profile')}
+          >
+            <Text style={styles.profileButtonText}>Profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.newTopicButton}
+            onPress={() => router.push('/topic/new-topic')}
+          >
+            <Text style={styles.newTopicButtonText}>New Topic</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.topicsList} ref={scrollViewRef}>
@@ -265,6 +273,20 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  profileButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 5,
+  },
+  profileButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   newTopicButton: {
     backgroundColor: '#007AFF',
