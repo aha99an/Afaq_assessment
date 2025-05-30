@@ -36,7 +36,7 @@ exports.createTopic = async (req, res) => {
 // Get all topics with pagination and filters
 exports.getAllTopics = async (req, res) => {
   try {
-    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc', search, category } = req.query;
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc', search, category, userId } = req.query;
     
     // Build query
     let query = {};
@@ -48,6 +48,9 @@ exports.getAllTopics = async (req, res) => {
     }
     if (category) {
       query.category = category;
+    }
+    if (userId) {
+      query.author = userId;
     }
 
     // Calculate pagination
