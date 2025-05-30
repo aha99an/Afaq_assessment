@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
@@ -117,6 +117,7 @@ export default function HomeScreen() {
     limit: 10,
     totalPages: 0,
   });
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const fetchTopics = async (page: number) => {
     try {
@@ -150,6 +151,9 @@ export default function HomeScreen() {
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
       fetchTopics(newPage);
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: 0, animated: true });
+      }
     }
   };
 
@@ -173,7 +177,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.topicsList}>
+      <ScrollView style={styles.topicsList} ref={scrollViewRef}>
         {topics.map((topic, index) => (
           <TouchableOpacity
             key={topic._id}
