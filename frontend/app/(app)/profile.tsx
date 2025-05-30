@@ -6,6 +6,37 @@ import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import config from '../../src/config';
 
+// Add interfaces for our data types
+interface Topic {
+  _id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  replies: Array<any>;
+}
+
+interface Reply {
+  _id: string;
+  content: string;
+  createdAt: string;
+  topic: {
+    _id: string;
+    title: string;
+  };
+}
+
+// Use the User type from auth context
+type User = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  country?: string;
+  githubUrl?: string;
+  profilePhoto?: string;
+  joinDate: string;
+};
+
 const DEFAULT_PROFILE_PHOTO = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
 
 const COUNTRIES = [
@@ -60,9 +91,14 @@ export default function ProfileScreen() {
   });
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [userTopics, setUserTopics] = useState<Topic[]>([]);
+  const [userReplies, setUserReplies] = useState<Reply[]>([]);
+  const [topicsLoading, setTopicsLoading] = useState(true);
+  const [repliesLoading, setRepliesLoading] = useState(true);
 
+  // Fetch user data and topics when component mounts
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchData = async () => {
       if (!user && token) {
         try {
           const response = await fetch(`${config.apiBaseUrl}/auth/profile`, {
@@ -83,8 +119,70 @@ export default function ProfileScreen() {
       setInitialLoading(false);
     };
 
-    fetchUserData();
+    fetchData();
   }, [user, token, signin]);
+
+  // Fetch user's topics
+  useEffect(() => {
+    const fetchUserTopics = async () => {
+      if (user?.id && token) {
+        try {
+          setTopicsLoading(true);
+          const response = await fetch(
+            `${config.apiBaseUrl}/topics?userId=${user.id}&limit=2&sortBy=createdAt&sortOrder=desc`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            }
+          );
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            setUserTopics(data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching user topics:', error);
+        } finally {
+          setTopicsLoading(false);
+        }
+      }
+    };
+
+    fetchUserTopics();
+  }, [user?.id, token]);
+
+  // Fetch user's replies
+  useEffect(() => {
+    const fetchUserReplies = async () => {
+      if (user?.id && token) {
+        try {
+          setRepliesLoading(true);
+          const response = await fetch(
+            `${config.apiBaseUrl}/replies?userId=${user.id}&limit=2&sortBy=createdAt&sortOrder=desc`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            }
+          );
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            setUserReplies(data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching user replies:', error);
+        } finally {
+          setRepliesLoading(false);
+        }
+      }
+    };
+
+    fetchUserReplies();
+  }, [user?.id, token]);
 
   const handleLogout = async () => {
     await logout();
@@ -311,6 +409,74 @@ export default function ProfileScreen() {
         )}
       </View>
 
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>My Topics</Text>
+          <TouchableOpacity 
+            onPress={() => router.push('/my-topics' as any)}
+            style={styles.viewAllButton}
+          >
+            <Text style={styles.viewAllButtonText}>View All</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.infoCard}>
+          {topicsLoading ? (
+            <Text style={styles.loadingText}>Loading topics...</Text>
+          ) : userTopics.length > 0 ? (
+            userTopics.map((topic) => (
+              <TouchableOpacity
+                key={topic._id}
+                style={styles.topicItem}
+                onPress={() => router.push(`/topic/topic-details?id=${topic._id}` as any)}
+              >
+                <Text style={styles.topicTitle}>{topic.title}</Text>
+                <Text style={styles.topicMeta}>
+                  {new Date(topic.createdAt).toLocaleDateString()} • {topic.replies?.length || 0} replies
+                </Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={styles.noTopicsText}>You haven't created any topics yet</Text>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>My Replies</Text>
+          <TouchableOpacity 
+            onPress={() => router.push('/my-replies' as any)}
+            style={styles.viewAllButton}
+          >
+            <Text style={styles.viewAllButtonText}>View All</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.infoCard}>
+          {repliesLoading ? (
+            <Text style={styles.loadingText}>Loading replies...</Text>
+          ) : userReplies.length > 0 ? (
+            userReplies.map((reply) => (
+              <TouchableOpacity
+                key={reply._id}
+                style={styles.replyItem}
+                onPress={() => router.push(`/topic/topic-details?id=${reply.topic._id}` as any)}
+              >
+                <Text style={styles.replyContent} numberOfLines={2}>
+                  {reply.content}
+                </Text>
+                <Text style={styles.replyMeta}>
+                  On topic: {reply.topic.title} • {new Date(reply.createdAt).toLocaleDateString()}
+                </Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={styles.noTopicsText}>You haven't made any replies yet</Text>
+          )}
+        </View>
+      </View>
+
       <TouchableOpacity 
         style={[styles.button, { backgroundColor: '#007AFF', marginBottom: 10 }]} 
         onPress={() => router.push('/(app)/change-password')}
@@ -509,5 +675,54 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 50,
+  },
+  viewAllButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 5,
+  },
+  viewAllButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  topicItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  topicTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 4,
+  },
+  topicMeta: {
+    fontSize: 14,
+    color: '#666',
+  },
+  loadingText: {
+    textAlign: 'center',
+    color: '#666',
+    padding: 20,
+  },
+  noTopicsText: {
+    textAlign: 'center',
+    color: '#666',
+    padding: 20,
+  },
+  replyItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  replyContent: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 4,
+  },
+  replyMeta: {
+    fontSize: 14,
+    color: '#666',
   },
 }); 
