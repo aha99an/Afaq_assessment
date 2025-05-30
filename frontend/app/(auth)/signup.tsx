@@ -106,7 +106,7 @@ export default function SignupScreen() {
       if (response.ok) {
         if (data.success && data.data) {
           await signin(data.data.token, data.data.user);
-          router.replace('/(app)/profile');
+          router.replace('/(app)/home');
         } else {
           setGeneralError('Invalid response format from server');
         }
