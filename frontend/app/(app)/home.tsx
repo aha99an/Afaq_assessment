@@ -178,7 +178,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             key={topic._id}
             style={styles.topicCard}
-            onPress={() => router.push(`../../app/(app)/topic/${topic._id}`)}
+            onPress={() => router.push(`/topic/topic-details?id=${topic._id}`)}
           >
             <View style={styles.topicHeader}>
               <View style={styles.topicNumberContainer}>

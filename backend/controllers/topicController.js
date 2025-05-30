@@ -105,7 +105,7 @@ exports.getTopic = async (req, res) => {
 
     // Get replies for this topic
     const replies = await Reply.find({ topic: topic._id })
-      .populate('author', 'firstName lastName profilePhoto');
+      .populate('author', 'firstName lastName email profilePhoto country githubUrl');
 
     // Increment views
     topic.views += 1;
