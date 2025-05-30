@@ -413,7 +413,7 @@ export default function ProfileScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>My Topics</Text>
           <TouchableOpacity 
-            onPress={() => router.push('/topics' as any)}
+            onPress={() => router.push('/my-topics' as any)}
             style={styles.viewAllButton}
           >
             <Text style={styles.viewAllButtonText}>View All</Text>
@@ -446,7 +446,7 @@ export default function ProfileScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>My Replies</Text>
           <TouchableOpacity 
-            onPress={() => router.push('/replies' as any)}
+            onPress={() => router.push('/my-replies' as any)}
             style={styles.viewAllButton}
           >
             <Text style={styles.viewAllButtonText}>View All</Text>
